@@ -13,7 +13,8 @@ import {
   SESSION_CLEAR_ACTIVE,
   SESSION_USER_DATA,
   SESSION_SET_XTERM_TITLE,
-  SESSION_SEARCH
+  SESSION_SEARCH,
+  SESSION_URL_SET
 } from '../constants/sessions';
 import {HyperState, session, HyperDispatch, HyperActions} from '../hyper';
 
@@ -104,6 +105,14 @@ export function clearActiveSession(): HyperActions {
   return {
     type: SESSION_CLEAR_ACTIVE
   };
+}
+
+export function setUrlSession(url: string, uid: string): HyperActions {
+  return {
+    type: SESSION_URL_SET,
+    url,
+    uid
+  }
 }
 
 export function setSessionXtermTitle(uid: string, title: string): HyperActions {

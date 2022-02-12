@@ -6,15 +6,21 @@ import {SearchAddon} from 'xterm-addon-search';
 import {WebglAddon} from 'xterm-addon-webgl';
 import {LigaturesAddon} from 'xterm-addon-ligatures';
 import {Unicode11Addon} from 'xterm-addon-unicode11';
-import {clipboard, shell} from 'electron';
+import {clipboard} from 'electron';
+import remote from '@electron/remote';
 import Color from 'color';
 import terms from '../terms';
 import processClipboard from '../utils/paste';
 import SearchBox from './searchBox';
 import {TermProps} from '../hyper';
+import configureStore from '../store/configure-store';
 import {ObjectTypedKeys} from '../utils/object';
+import { setUrlSession } from '../actions/sessions';
+import {SESSION_URL_SET} from '../constants/sessions';
+import { store_ } from '../index';
 
 const isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform);
+const store = configureStore();
 
 // map old hterm constants to xterm.js
 const CURSOR_STYLES = {
@@ -94,6 +100,7 @@ export default class Term extends React.PureComponent<TermProps> {
   term!: Terminal;
   resizeObserver!: ResizeObserver;
   resizeTimeout!: NodeJS.Timeout;
+  webViewRef: any | null;
   constructor(props: TermProps) {
     super(props);
     props.ref_(props.uid, this);
@@ -155,7 +162,7 @@ export default class Term extends React.PureComponent<TermProps> {
       this.term.loadAddon(
         new WebLinksAddon(
           (event: MouseEvent | undefined, uri: string) => {
-            if (shallActivateWebLink(event)) void shell.openExternal(uri);
+              store_.dispatch(setUrlSession(uri, props.uid))
           },
           {
             // prevent default electron link handling to allow selection, e.g. via double-click
@@ -344,19 +351,19 @@ export default class Term extends React.PureComponent<TermProps> {
 
     // Update only options that have changed.
     ObjectTypedKeys(nextTermOptions)
-      .filter((option) => option !== 'theme' && nextTermOptions[option] !== this.termOptions[option])
-      .forEach((option) => {
-        try {
-          this.term.setOption(option, nextTermOptions[option]);
-        } catch (_e) {
-          const e = _e as {message: string};
-          if (/The webgl renderer only works with the webgl char atlas/i.test(e.message)) {
-            // Ignore this because the char atlas will also be changed
-          } else {
-            throw e;
-          }
+    .filter((option) => option !== 'theme' && nextTermOptions[option] !== this.termOptions[option])
+    .forEach((option) => {
+      try {
+        this.term.setOption(option, nextTermOptions[option]);
+      } catch (_e) {
+        const e = _e as {message: string};
+        if (/The webgl renderer only works with the webgl char atlas/i.test(e.message)) {
+          // Ignore this because the char atlas will also be changed
+        } else {
+          throw e;
         }
-      });
+      }
+    });
 
     // Do we need to update theme?
     const shouldUpdateTheme =
@@ -364,7 +371,7 @@ export default class Term extends React.PureComponent<TermProps> {
       nextTermOptions.rendererType !== this.termOptions.rendererType ||
       ObjectTypedKeys(nextTermOptions.theme!).some(
         (option) => nextTermOptions.theme![option] !== this.termOptions.theme![option]
-      );
+    );
     if (shouldUpdateTheme) {
       this.term.setOption('theme', nextTermOptions.theme);
     }
@@ -374,8 +381,8 @@ export default class Term extends React.PureComponent<TermProps> {
     if (
       this.props.fontSize !== prevProps.fontSize ||
       this.props.fontFamily !== prevProps.fontFamily ||
-      this.props.lineHeight !== prevProps.lineHeight ||
-      this.props.letterSpacing !== prevProps.letterSpacing
+    this.props.lineHeight !== prevProps.lineHeight ||
+  this.props.letterSpacing !== prevProps.letterSpacing
     ) {
       // resize to fit the container
       this.fitResize();
@@ -419,39 +426,80 @@ export default class Term extends React.PureComponent<TermProps> {
     });
   }
 
+  setWebViewRef = (webView: any) => {
+    const oldRef = this.webViewRef;
+    this.webViewRef = webView;
+
+    if (!oldRef && webView) {
+      setTimeout(() => {
+        const wc = remote.webContents.fromId(webView.getWebContentsId());
+        wc.setIgnoreMenuShortcuts(true);
+        wc.on('before-input-event', (_event: any, input: any) => {
+          if (input.type === 'keyDown') {
+            if (input.key === 'r' && input.meta) {
+              webView.reload();
+            } else if (input.key === '=' && input.meta) {
+              wc.setZoomLevel(wc.getZoomLevel() + 1);
+            } else if (input.key === '-' && input.meta) {
+              wc.setZoomLevel(wc.getZoomLevel() - 1);
+            }
+          }
+        });
+      }, 10);
+    }
+  };
+
   render() {
     return (
       <div
-        className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`}
-        style={{padding: this.props.padding}}
-        onMouseUp={this.onMouseUp}
+      className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`}
+      style={{padding: this.props.padding}}
+      onMouseUp={this.onMouseUp}
       >
-        {this.props.customChildrenBefore}
-        <div ref={this.onTermWrapperRef} className="term_fit term_wrapper" />
-        {this.props.customChildren}
-        {this.props.search ? (
-          <SearchBox
-            search={this.search}
-            next={this.searchNext}
-            prev={this.searchPrevious}
-            close={this.closeSearchBox}
-          />
-        ) : (
-          ''
-        )}
+      {this.props.url ? (
+        <webview
+        ref={this.setWebViewRef}
+        src={this.props.url}
+        style={{
+          background: '#fff',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          display: 'inline-flex',
+          width: '100%',
+          height: '100%'
+        }}
+        />
+      ) : (
+      <>
+      {this.props.customChildrenBefore}
+      <div ref={this.onTermWrapperRef} className="term_fit term_wrapper" />
+      {this.props.customChildren}
+      {this.props.search ? (
+        <SearchBox
+        search={this.search}
+        next={this.searchNext}
+        prev={this.searchPrevious}
+        close={this.closeSearchBox}
+        />
+      ) : (
+      ''
+      )}
+      </>
+      )}
 
-        <style jsx global>{`
-          .term_fit {
-            display: block;
-            width: 100%;
-            height: 100%;
-          }
+      <style jsx global>{`
+        .term_fit {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
 
-          .term_wrapper {
-            /* TODO: decide whether to keep this or not based on understanding what xterm-selection is for */
-            overflow: hidden;
-          }
-        `}</style>
+        .term_wrapper {
+          /* TODO: decide whether to keep this or not based on understanding what xterm-selection is for */
+              overflow: hidden;
+        }
+      `}</style>
       </div>
     );
   }

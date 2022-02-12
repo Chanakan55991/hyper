@@ -25,7 +25,7 @@ if (process.platform === 'linux') {
   webFrame.setZoomFactor(1.2);
 }
 
-const store_ = configureStore();
+export const store_ = configureStore();
 
 Object.defineProperty(window, 'store', {get: () => store_});
 Object.defineProperty(window, 'rpc', {get: () => rpc});
