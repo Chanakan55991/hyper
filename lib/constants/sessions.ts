@@ -14,7 +14,6 @@ export const SESSION_SET_XTERM_TITLE = 'SESSION_SET_XTERM_TITLE';
 export const SESSION_SET_CWD = 'SESSION_SET_CWD';
 export const SESSION_SEARCH = 'SESSION_SEARCH';
 
-
 export interface SessionAddAction {
   type: typeof SESSION_ADD;
   uid: string;
@@ -86,7 +85,6 @@ export interface SessionSearchAction {
   uid: string;
   value: boolean;
 }
-
 
 export type SessionActions =
   | SessionAddAction

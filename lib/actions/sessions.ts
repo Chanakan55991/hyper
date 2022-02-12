@@ -112,7 +112,7 @@ export function setUrlSession(url: string, uid: string): HyperActions {
     type: SESSION_URL_SET,
     url,
     uid
-  }
+  };
 }
 
 export function setSessionXtermTitle(uid: string, title: string): HyperActions {

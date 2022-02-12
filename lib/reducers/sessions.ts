@@ -30,7 +30,7 @@ function Session(obj: Immutable.DeepPartial<session>) {
     cleared: false,
     search: false,
     shell: '',
-    pid: null,
+    pid: null
   };
   return Immutable(x).merge(obj);
 }
@@ -103,7 +103,7 @@ const reducer: ISessionReducer = (state = initialState, action) => {
       return deleteSession(state, action.uid);
 
     case SESSION_SET_XTERM_TITLE:
-      console.warn(state.sessions)
+      console.warn(state.sessions);
       return state.setIn(
         ['sessions', action.uid, 'title'],
         // we need to trim the title because `cmd.exe`
@@ -128,7 +128,7 @@ const reducer: ISessionReducer = (state = initialState, action) => {
       return state;
 
     case SESSION_URL_SET:
-      console.warn(state.sessions)
+      console.warn(state.sessions);
       return state.setIn(['sessions', action.uid, 'url'], action.url);
 
     default:

@@ -13,14 +13,11 @@ import terms from '../terms';
 import processClipboard from '../utils/paste';
 import SearchBox from './searchBox';
 import {TermProps} from '../hyper';
-import configureStore from '../store/configure-store';
 import {ObjectTypedKeys} from '../utils/object';
-import { setUrlSession } from '../actions/sessions';
-import {SESSION_URL_SET} from '../constants/sessions';
-import { store_ } from '../index';
+import {setUrlSession} from '../actions/sessions';
+import {store_} from '../index';
 
 const isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform);
-const store = configureStore();
 
 // map old hterm constants to xterm.js
 const CURSOR_STYLES = {
@@ -162,7 +159,7 @@ export default class Term extends React.PureComponent<TermProps> {
       this.term.loadAddon(
         new WebLinksAddon(
           (event: MouseEvent | undefined, uri: string) => {
-              store_.dispatch(setUrlSession(uri, props.uid))
+            store_.dispatch(setUrlSession(uri, props.uid));
           },
           {
             // prevent default electron link handling to allow selection, e.g. via double-click
@@ -351,19 +348,19 @@ export default class Term extends React.PureComponent<TermProps> {
 
     // Update only options that have changed.
     ObjectTypedKeys(nextTermOptions)
-    .filter((option) => option !== 'theme' && nextTermOptions[option] !== this.termOptions[option])
-    .forEach((option) => {
-      try {
-        this.term.setOption(option, nextTermOptions[option]);
-      } catch (_e) {
-        const e = _e as {message: string};
-        if (/The webgl renderer only works with the webgl char atlas/i.test(e.message)) {
-          // Ignore this because the char atlas will also be changed
-        } else {
-          throw e;
+      .filter((option) => option !== 'theme' && nextTermOptions[option] !== this.termOptions[option])
+      .forEach((option) => {
+        try {
+          this.term.setOption(option, nextTermOptions[option]);
+        } catch (_e) {
+          const e = _e as {message: string};
+          if (/The webgl renderer only works with the webgl char atlas/i.test(e.message)) {
+            // Ignore this because the char atlas will also be changed
+          } else {
+            throw e;
+          }
         }
-      }
-    });
+      });
 
     // Do we need to update theme?
     const shouldUpdateTheme =
@@ -371,7 +368,7 @@ export default class Term extends React.PureComponent<TermProps> {
       nextTermOptions.rendererType !== this.termOptions.rendererType ||
       ObjectTypedKeys(nextTermOptions.theme!).some(
         (option) => nextTermOptions.theme![option] !== this.termOptions.theme![option]
-    );
+      );
     if (shouldUpdateTheme) {
       this.term.setOption('theme', nextTermOptions.theme);
     }
@@ -381,8 +378,8 @@ export default class Term extends React.PureComponent<TermProps> {
     if (
       this.props.fontSize !== prevProps.fontSize ||
       this.props.fontFamily !== prevProps.fontFamily ||
-    this.props.lineHeight !== prevProps.lineHeight ||
-  this.props.letterSpacing !== prevProps.letterSpacing
+      this.props.lineHeight !== prevProps.lineHeight ||
+      this.props.letterSpacing !== prevProps.letterSpacing
     ) {
       // resize to fit the container
       this.fitResize();
@@ -434,7 +431,7 @@ export default class Term extends React.PureComponent<TermProps> {
       setTimeout(() => {
         const wc = remote.webContents.fromId(webView.getWebContentsId());
         wc.setIgnoreMenuShortcuts(true);
-        wc.on('before-input-event', (_event: any, input: any) => {
+        wc.on('before-input-event', (_event: any, input: any): void => {
           if (input.type === 'keyDown') {
             if (input.key === 'r' && input.meta) {
               webView.reload();
@@ -452,54 +449,54 @@ export default class Term extends React.PureComponent<TermProps> {
   render() {
     return (
       <div
-      className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`}
-      style={{padding: this.props.padding}}
-      onMouseUp={this.onMouseUp}
+        className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`}
+        style={{padding: this.props.padding}}
+        onMouseUp={this.onMouseUp}
       >
-      {this.props.url ? (
-        <webview
-        ref={this.setWebViewRef}
-        src={this.props.url}
-        style={{
-          background: '#fff',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          display: 'inline-flex',
-          width: '100%',
-          height: '100%'
-        }}
-        />
-      ) : (
-      <>
-      {this.props.customChildrenBefore}
-      <div ref={this.onTermWrapperRef} className="term_fit term_wrapper" />
-      {this.props.customChildren}
-      {this.props.search ? (
-        <SearchBox
-        search={this.search}
-        next={this.searchNext}
-        prev={this.searchPrevious}
-        close={this.closeSearchBox}
-        />
-      ) : (
-      ''
-      )}
-      </>
-      )}
+        {this.props.url ? (
+          <webview
+            ref={this.setWebViewRef}
+            src={this.props.url}
+            style={{
+              background: '#fff',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              display: 'inline-flex',
+              width: '100%',
+              height: '100%'
+            }}
+          />
+        ) : (
+          <>
+            {this.props.customChildrenBefore}
+            <div ref={this.onTermWrapperRef} className="term_fit term_wrapper" />
+            {this.props.customChildren}
+            {this.props.search ? (
+              <SearchBox
+                search={this.search}
+                next={this.searchNext}
+                prev={this.searchPrevious}
+                close={this.closeSearchBox}
+              />
+            ) : (
+              ''
+            )}
+          </>
+        )}
 
-      <style jsx global>{`
-        .term_fit {
-          display: block;
-          width: 100%;
-          height: 100%;
-        }
+        <style jsx global>{`
+          .term_fit {
+            display: block;
+            width: 100%;
+            height: 100%;
+          }
 
-        .term_wrapper {
-          /* TODO: decide whether to keep this or not based on understanding what xterm-selection is for */
-              overflow: hidden;
-        }
-      `}</style>
+          .term_wrapper {
+            /* TODO: decide whether to keep this or not based on understanding what xterm-selection is for */
+            overflow: hidden;
+          }
+        `}</style>
       </div>
     );
   }

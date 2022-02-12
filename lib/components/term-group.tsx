@@ -109,7 +109,6 @@ class TermGroup_ extends React.PureComponent<TermGroupProps> {
       uid
     });
 
-
     // This will create a new ref_ function for every render,
     // which is inefficient. Should maybe do something similar
     // to this.bind.
