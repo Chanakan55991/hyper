@@ -1,21 +1,21 @@
-import React, { LegacyRef } from 'react';
-import { Terminal, ITerminalOptions, IDisposable } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import { WebLinksAddon } from 'xterm-addon-web-links';
-import { SearchAddon } from 'xterm-addon-search';
-import { WebglAddon } from 'xterm-addon-webgl';
-import { LigaturesAddon } from 'xterm-addon-ligatures';
-import { Unicode11Addon } from 'xterm-addon-unicode11';
-import { clipboard } from 'electron';
+import React from 'react';
+import {Terminal, ITerminalOptions, IDisposable} from 'xterm';
+import {FitAddon} from 'xterm-addon-fit';
+import {WebLinksAddon} from 'xterm-addon-web-links';
+import {SearchAddon} from 'xterm-addon-search';
+import {WebglAddon} from 'xterm-addon-webgl';
+import {LigaturesAddon} from 'xterm-addon-ligatures';
+import {Unicode11Addon} from 'xterm-addon-unicode11';
+import {clipboard} from 'electron';
 import remote from '@electron/remote';
 import Color from 'color';
 import terms from '../terms';
 import processClipboard from '../utils/paste';
 import SearchBox from './searchBox';
-import { TermProps } from '../hyper';
-import { ObjectTypedKeys } from '../utils/object';
-import { setUrlSession } from '../actions/sessions';
-import { store_ } from '../index';
+import {TermProps} from '../hyper';
+import {ObjectTypedKeys} from '../utils/object';
+import {setUrlSession} from '../actions/sessions';
+import {store_} from '../index';
 
 const isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform);
 
@@ -31,7 +31,7 @@ const isWebgl2Supported = (() => {
   return () => {
     if (isSupported === undefined) {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2', { depth: false, antialias: false });
+      const gl = canvas.getContext('webgl2', {depth: false, antialias: false});
       isSupported = gl instanceof window.WebGL2RenderingContext;
     }
     return isSupported;
@@ -115,12 +115,12 @@ export default class Term extends React.PureComponent<TermProps> {
     if (rendererTypes[uid] !== type) {
       rendererTypes[uid] = type;
       Term.rendererTypes = rendererTypes;
-      window.rpc.emit('info renderer', { uid, type });
+      window.rpc.emit('info renderer', {uid, type});
     }
   }
 
   componentDidMount() {
-    const { props } = this;
+    const {props} = this;
 
     this.termOptions = getTermOptions(props);
     this.term = props.term || new Terminal(this.termOptions);
@@ -208,7 +208,7 @@ export default class Term extends React.PureComponent<TermProps> {
 
     if (props.onResize) {
       this.disposableListeners.push(
-        this.term.onResize(({ cols, rows }) => {
+        this.term.onResize(({cols, rows}) => {
           props.onResize(cols, rows);
         })
       );
@@ -243,10 +243,10 @@ export default class Term extends React.PureComponent<TermProps> {
   getTermDocument() {
     console.warn(
       'The underlying terminal engine of Hyper no longer ' +
-      'uses iframes with individual `document` objects for each ' +
-      'terminal instance. This method call is retained for ' +
-      "backwards compatibility reasons. It's ok to attach directly" +
-      'to the `document` object of the main `window`.'
+        'uses iframes with individual `document` objects for each ' +
+        'terminal instance. This method call is retained for ' +
+        "backwards compatibility reasons. It's ok to attach directly" +
+        'to the `document` object of the main `window`.'
     );
     return document;
   }
@@ -352,7 +352,7 @@ export default class Term extends React.PureComponent<TermProps> {
         try {
           this.term.setOption(option, nextTermOptions[option]);
         } catch (_e) {
-          const e = _e as { message: string };
+          const e = _e as {message: string};
           if (/The webgl renderer only works with the webgl char atlas/i.test(e.message)) {
             // Ignore this because the char atlas will also be changed
           } else {
@@ -426,7 +426,7 @@ export default class Term extends React.PureComponent<TermProps> {
     return (
       <div
         className={`term_fit ${this.props.isTermActive ? 'term_active' : ''}`}
-        style={{ padding: this.props.padding }}
+        style={{padding: this.props.padding}}
         onMouseUp={this.onMouseUp}
       >
         {this.props.url ? (
